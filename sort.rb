@@ -43,7 +43,38 @@ class Sort
     print
   end
 
-  def print(subject: nil, comparing: nil, swapping: false)
+  def quick(set: @set.dup, lesser_before: [], greater_before: [])
+    if set.empty?
+      return set
+    end
+# 5+15+95+45+55+85+25+75+100+65+35
+# 15+95+45+55+85+25+75+100+65+35
+    pivot = (set.length / 2).to_i
+    print(set: lesser_before + set + greater_before, subject: pivot)
+    pivot_value = set.delete_at(pivot)
+    greater, lesser = *(set.partition { |v| v > pivot_value })
+    intermediate = lesser_before + lesser + [pivot_value] + greater + greater_before
+    print(set: intermediate, subject: intermediate.find_index(pivot_value))
+    less = []
+    more = []
+    if lesser.length > 1
+      less = quick(
+        set: lesser,
+        greater_before: [pivot_value] + greater + greater_before,
+        lesser_before: lesser_before
+      )
+    end
+   if greater.length > 1
+    more = quick(
+      set: greater,
+      lesser_before: lesser_before + lesser + [pivot_value],
+      greater_before: greater_before
+    )
+   end
+   less + [pivot_value] + more
+  end
+
+  def print(set: @set, subject: nil, comparing: nil, swapping: false, newline: true)
     printable = set.map(&:to_s)
     if swapping
       subject, comparing = comparing, subject
@@ -55,8 +86,11 @@ class Sort
     if subject
       printable[subject] = Rainbow(printable[subject]).green
     end
-    puts printable.join("+")
+    Kernel.print printable.join("+")
+    if newline
+      puts
+    end
   end
 end
 
-Sort.new([5, 15, 25, 35, 45, 55, 65, 75, 85, 95, 100].shuffle).insertion
+puts Sort.new([5, 15, 25, 35, 45, 55, 65, 75, 85, 95, 100].shuffle).quick.inspect
